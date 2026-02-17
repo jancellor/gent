@@ -2,6 +2,11 @@ import json
 from dataclasses import dataclass
 from typing import Literal
 
+try:
+    import readline  # Enables line editing/history for input() on Unix.
+except Exception:
+    readline = None
+
 
 @dataclass(frozen=True)
 class InputEvent:

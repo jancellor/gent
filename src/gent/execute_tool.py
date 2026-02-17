@@ -3,8 +3,8 @@ import subprocess
 from typing import Any
 
 
-class RunCommandTool:
-    name = "run_command"
+class ExecuteTool:
+    name = "execute"
 
     def tool_definition(self) -> dict[str, Any]:
         return {

@@ -1,7 +1,7 @@
 import json
 from typing import Any, Protocol
 
-from .run_command_tool import RunCommandTool
+from .execute_tool import ExecuteTool
 
 
 class Tool(Protocol):
@@ -14,7 +14,7 @@ class Tool(Protocol):
 
 class Tools:
     def __init__(self) -> None:
-        self.tools: list[Tool] = [RunCommandTool()]
+        self.tools: list[Tool] = [ExecuteTool()]
 
     def definitions(self) -> list[dict[str, Any]]:
         return [tool.tool_definition() for tool in self.tools]
