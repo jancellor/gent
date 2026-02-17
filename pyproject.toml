@@ -1,0 +1,20 @@
+[project]
+name = "gent"
+version = "0.1.0"
+description = "LiteLLM shell tool agent"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "litellm>=1.61.0",
+]
+
+[project.scripts]
+gent = "gent.main:main"
+simpletest = "gent.simpletest:main"
+
+[build-system]
+requires = ["hatchling>=1.24.0"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+package = true
