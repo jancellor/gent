@@ -1,0 +1,124 @@
+import React from 'react';
+import { Box, Text, useInput } from 'ink';
+import { useInputState } from './use-input-state.js';
+
+type InputProps = {
+  onSubmit: (message: string) => void | Promise<void>;
+};
+
+export function Input({ onSubmit }: InputProps) {
+  const {
+    value,
+    beforeCursor,
+    atCursor,
+    afterCursor,
+    moveStart,
+    moveEnd,
+    moveLeft,
+    moveRight,
+    moveWordLeft,
+    moveWordRight,
+    deleteBackward,
+    deleteToStart,
+    deleteToEnd,
+    deleteWordBackward,
+    insertText,
+    clear,
+  } = useInputState();
+
+  useInput((input, key) => {
+    if (key.ctrl && input === 'c') {
+      process.exit(0);
+    }
+
+    if (key.ctrl && input === 'a') {
+      moveStart();
+      return;
+    }
+
+    if (key.ctrl && input === 'e') {
+      moveEnd();
+      return;
+    }
+
+    if (key.ctrl && input === 'u') {
+      deleteToStart();
+      return;
+    }
+
+    if (key.ctrl && input === 'k') {
+      deleteToEnd();
+      return;
+    }
+
+    if (key.ctrl && input === 'w') {
+      deleteWordBackward();
+      return;
+    }
+
+    if (key.home) {
+      moveStart();
+      return;
+    }
+
+    if (key.end) {
+      moveEnd();
+      return;
+    }
+
+    if (key.leftArrow) {
+      if (key.ctrl || key.meta) {
+        moveWordLeft();
+      } else {
+        moveLeft();
+      }
+      return;
+    }
+
+    if (key.rightArrow) {
+      if (key.ctrl || key.meta) {
+        moveWordRight();
+      } else {
+        moveRight();
+      }
+      return;
+    }
+
+    if (key.backspace || key.delete) {
+      deleteBackward();
+      return;
+    }
+
+    if (key.return) {
+      const message = value.trim();
+      if (!message) {
+        return;
+      }
+
+      clear();
+      void onSubmit(message);
+      return;
+    }
+
+    if (!input) {
+      return;
+    }
+
+    insertText(input);
+  });
+
+  const width = Math.max(10, process.stdout.columns ?? 80);
+  const divider = '─'.repeat(width);
+
+  return (
+    <Box flexDirection="column">
+      <Text color="gray">{divider}</Text>
+      <Text>
+        {beforeCursor}
+        <Text inverse>{atCursor}</Text>
+        {afterCursor}
+      </Text>
+      <Text color="gray">{divider}</Text>
+    </Box>
+  );
+}
