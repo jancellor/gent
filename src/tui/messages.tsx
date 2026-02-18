@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box } from 'ink';
+import { Box, Static } from 'ink';
 import type { ModelMessage } from 'ai';
 import { AssistantPartMessage } from './assistant-part-message.js';
 import { SpinnerMessage } from './spinner-message.js';
@@ -14,29 +14,45 @@ export function Messages({ messages }: MessagesProps) {
   const toolResults = buildToolResultsMap(messages);
 
   const parts = messages.flatMap((message, i) =>
-    getContentParts(message.content).map((part, j) => ({ ...part, role: message.role, i, j })),
+    getContentParts(message.content).map((part, j) => ({
+      ...part,
+      role: message.role,
+      i,
+      j,
+      id: `${message.role}-${i}-${j}`,
+    })),
   );
 
-  const rows = parts.map((p) => {
+  const lastUserIdx = messages.findLastIndex((m) => m.role === 'user');
+  const splitPartIdx =
+    lastUserIdx > 0 ? parts.findIndex((p) => p.i >= lastUserIdx) : 0;
+
+  const staticParts = splitPartIdx > 0 ? parts.slice(0, splitPartIdx) : [];
+  const activeParts = splitPartIdx > 0 ? parts.slice(splitPartIdx) : parts;
+
+  const renderPart = (p: (typeof parts)[number]) => {
     if (p.type === 'text') {
       const Component = p.role === 'user' ? UserPartMessage : AssistantPartMessage;
-      return <Component key={`${p.role}-${p.i}-${p.j}`} text={p.text} />;
+      return <Component key={p.id} text={p.text} />;
     }
     return (
       <ToolPartMessage
-        key={`tool-${p.i}-${p.j}`}
+        key={p.id}
         toolName={p.toolName ?? toolResults.get(p.toolCallId)?.toolName}
         input={p.input}
         output={toolResults.get(p.toolCallId)?.output}
       />
     );
-  });
+  };
 
   const showSpinner = messages.length > 0 && messages.at(-1)!.role !== 'assistant';
 
   return (
     <Box flexGrow={1} flexDirection="column">
-      {rows}
+      <Static items={staticParts}>
+        {(p) => renderPart(p)}
+      </Static>
+      {activeParts.map(renderPart)}
       {showSpinner && <SpinnerMessage />}
     </Box>
   );
