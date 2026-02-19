@@ -23,12 +23,12 @@ export function Messages({ messages }: MessagesProps) {
     })),
   );
 
-  const lastUserIdx = messages.findLastIndex((m) => m.role === 'user');
-  const splitPartIdx =
-    lastUserIdx > 0 ? parts.findIndex((p) => p.i >= lastUserIdx) : 0;
+  const splitIdx = parts.findIndex(
+    (p) => p.type === 'tool-call' && !toolResults.has(p.toolCallId),
+  );
 
-  const staticParts = splitPartIdx > 0 ? parts.slice(0, splitPartIdx) : [];
-  const activeParts = splitPartIdx > 0 ? parts.slice(splitPartIdx) : parts;
+  const staticParts = splitIdx === -1 ? parts : parts.slice(0, splitIdx);
+  const activeParts = splitIdx === -1 ? [] : parts.slice(splitIdx);
 
   const renderPart = (p: (typeof parts)[number]) => {
     if (p.type === 'text') {
