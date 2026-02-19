@@ -18,7 +18,7 @@ marked.setOptions({
     hr: chalk.hex('#4A5070'),
     listitem: chalk.hex('#C5CCE1'),
     table: chalk.hex('#C5CCE1'),
-    paragraph: chalk.hex('#C5CCE1'),
+    paragraph: chalk.reset,
     emoji: true,
     showSectionPrefix: true,
     reflowText: false,
