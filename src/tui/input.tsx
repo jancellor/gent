@@ -2,12 +2,15 @@ import React from 'react';
 import { Box, Text, useInput } from 'ink';
 import { useInputState } from './use-input-state.js';
 
+const CLEAR_COMMAND = '/clear';
+
 type InputProps = {
   onSubmit: (message: string) => void | Promise<void>;
   onAbort: () => void;
+  onClear: (beforeClear?: () => void) => Promise<void>;
 };
 
-export function Input({ onSubmit, onAbort }: InputProps) {
+export function Input({ onSubmit, onAbort, onClear }: InputProps) {
   const {
     value,
     beforeCursor,
@@ -97,7 +100,7 @@ export function Input({ onSubmit, onAbort }: InputProps) {
 
     if (key.return) {
       if (key.meta) {
-        insertText("\n");
+        insertText('\n');
         return;
       }
 
@@ -107,7 +110,14 @@ export function Input({ onSubmit, onAbort }: InputProps) {
       }
 
       clear();
-      void onSubmit(message);
+
+      if (message === CLEAR_COMMAND) {
+        void onClear(() => {
+          console.log('[New session]\n');
+        });
+      } else {
+        void onSubmit(message);
+      }
       return;
     }
 

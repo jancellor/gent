@@ -6,6 +6,7 @@ type UseAgentResult = {
   messages: ModelMessage[];
   sendMessage: (message: string) => Promise<void>;
   abort: () => void;
+  clear: (beforeClear?: () => void) => Promise<void>;
 };
 
 export function useAgent(): UseAgentResult {
@@ -27,9 +28,12 @@ export function useAgent(): UseAgentResult {
 
   const abort = useCallback(() => agent.abort(), [agent]);
 
+  const clear = useCallback((beforeClear?: () => void) => agent.clear(beforeClear), [agent]);
+
   return {
     messages,
     sendMessage,
     abort,
+    clear,
   };
 }
