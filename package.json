@@ -19,10 +19,13 @@
     "@ai-sdk/openai-compatible": "^2.0.30",
     "ai": "^6.0.90",
     "ink": "^6.7.0",
+    "marked": "^15.0.12",
+    "marked-terminal": "^7.3.0",
     "react": "^19.2.4",
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@types/marked-terminal": "^6.1.1",
     "@types/node": "^25.2.3",
     "@types/react": "^19.2.14",
     "prettier": "^3.8.1",
