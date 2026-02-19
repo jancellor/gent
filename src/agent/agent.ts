@@ -13,6 +13,8 @@ import { Tools } from './tools.js';
 
 export type { ModelMessage };
 
+export const ABORTED_MESSAGE = '[Aborted]';
+
 type AgentOptions = {
   onUpdate?: () => void;
 };
@@ -25,6 +27,7 @@ export class Agent {
   private systemPrompt: string;
   private tools: Tools;
   private previousSendMessageResult: Promise<void> = Promise.resolve();
+  private controller: AbortController | null = null;
 
   constructor(options?: AgentOptions) {
     const config = new ConfigReader().read();
@@ -41,6 +44,10 @@ export class Agent {
 
   private notify(): void {
     this.onUpdate?.();
+  }
+
+  abort(): void {
+    this.controller?.abort();
   }
 
   sendMessage(message: string): Promise<void> {
@@ -62,26 +69,44 @@ export class Agent {
     this.messages.push({ role: 'user', content: message });
     this.notify();
 
-    while (true) {
-      const result = await generateText({
-        model: this.languageModel,
-        system: this.systemPrompt,
-        messages: this.messages,
-        tools: this.tools.definitions(),
-      });
+    this.controller = new AbortController();
+    const { signal } = this.controller;
 
-      this.messages.push(...result.response.messages);
-      this.notify();
+    try {
+      while (true) {
+        const result = await generateText({
+          model: this.languageModel,
+          system: this.systemPrompt,
+          messages: this.messages,
+          tools: this.tools.definitions(),
+          abortSignal: signal,
+        });
 
-      if (result.toolCalls.length === 0) break;
-      const toolResults = await this.callTools(result.toolCalls);
+        this.messages.push(...result.response.messages);
+        this.notify();
 
-      this.messages.push({ role: 'tool', content: toolResults });
-      this.notify();
+        if (result.toolCalls.length === 0) break;
+
+        const toolResults = await this.callTools(result.toolCalls, signal);
+        this.messages.push({ role: 'tool', content: toolResults });
+        this.notify();
+      }
+    } catch (e) {
+      if (!signal.aborted) throw e;
+      const lastMessage = this.messages.at(-1);
+      if (lastMessage && lastMessage.role !== 'assistant') {
+        this.messages.push({ role: 'assistant', content: ABORTED_MESSAGE });
+        this.notify();
+      }
+    } finally {
+      this.controller = null;
     }
   }
 
-  private async callTools(toolCalls: Array<TypedToolCall<ToolSet>>): Promise<ToolContent> {
+  private async callTools(
+    toolCalls: Array<TypedToolCall<ToolSet>>,
+    signal: AbortSignal,
+  ): Promise<ToolContent> {
     return await Promise.all(
       toolCalls.map(async (toolCall) => ({
         type: 'tool-result',
@@ -92,6 +117,7 @@ export class Agent {
           value: await this.tools.execute(
             toolCall.toolName,
             toolCall.input,
+            signal,
           ),
         },
       })),

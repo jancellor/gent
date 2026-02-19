@@ -4,9 +4,10 @@ import { useInputState } from './use-input-state.js';
 
 type InputProps = {
   onSubmit: (message: string) => void | Promise<void>;
+  onAbort: () => void;
 };
 
-export function Input({ onSubmit }: InputProps) {
+export function Input({ onSubmit, onAbort }: InputProps) {
   const {
     value,
     beforeCursor,
@@ -27,6 +28,11 @@ export function Input({ onSubmit }: InputProps) {
   } = useInputState();
 
   useInput((input, key) => {
+    if (key.escape) {
+      onAbort();
+      return;
+    }
+
     if (key.ctrl && input === 'c') {
       process.exit(0);
     }

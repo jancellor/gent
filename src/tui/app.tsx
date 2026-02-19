@@ -5,7 +5,7 @@ import { Messages } from './messages.js';
 import { useAgent } from './use-agent.js';
 
 export function App() {
-  const { messages, sendMessage } = useAgent();
+  const { messages, sendMessage, abort } = useAgent();
 
   const handleSubmit = (message: string) => {
     void sendMessage(message);
@@ -14,7 +14,7 @@ export function App() {
   return (
     <Box flexDirection="column" height="100%">
       <Messages messages={messages} />
-      <Input onSubmit={handleSubmit} />
+      <Input onSubmit={handleSubmit} onAbort={abort} />
     </Box>
   );
 }

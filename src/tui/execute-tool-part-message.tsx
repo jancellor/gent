@@ -27,9 +27,15 @@ export function ExecuteToolPartMessage({ input, output }: ToolPartMessageRenderP
           <Text> </Text>
         </>
       ) : null}
-      {parsed?.exitCode ? (
+      {parsed?.exit ? (
         <>
-          <Text>{`exit ${parsed.exitCode}`}</Text>
+          <Text>{parsed.exit}</Text>
+          <Text> </Text>
+        </>
+      ) : null}
+      {parsed?.signal ? (
+        <>
+          <Text color="red" dimColor>{parsed.signal}</Text>
           <Text> </Text>
         </>
       ) : null}
@@ -41,7 +47,8 @@ export function ExecuteToolPartMessage({ input, output }: ToolPartMessageRenderP
 type ParsedExecuteOutput = {
   stdout: string;
   stderr: string;
-  exitCode: string;
+  exit: string;
+  signal: string;
 };
 
 function parseExecuteToolOutput(output: unknown): ParsedExecuteOutput | null {
@@ -61,9 +68,15 @@ function parseExecuteToolOutput(output: unknown): ParsedExecuteOutput | null {
     typeof inner.stderr === 'string' && inner.stderr.trim().length > 0
       ? inner.stderr.trimEnd()
       : '';
-  const exitCode = String(inner.exitCode ?? inner.exit_code ?? 'unknown');
+  const exit = inner.exit ?? inner.exitCode;
+  const signal = inner.signal;
 
-  return { stdout, stderr, exitCode };
+  return {
+    stdout,
+    stderr,
+    exit: exit !== undefined ? `exit ${exit}` : '',
+    signal: signal ? String(signal) : '',
+  };
 }
 
 function formatExecuteToolInput(input: unknown): string {

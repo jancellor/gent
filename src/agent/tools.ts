@@ -10,10 +10,10 @@ export class Tools {
     };
   }
 
-  execute(name: string, args: unknown): Promise<JSONValue> {
+  execute(name: string, args: unknown, signal: AbortSignal): Promise<JSONValue> {
     switch (name) {
       case this.executeTool.name:
-        return this.executeTool.execute(args);
+        return this.executeTool.execute(args, signal);
       default:
         throw new Error(`Unknown tool: ${name}`);
     }

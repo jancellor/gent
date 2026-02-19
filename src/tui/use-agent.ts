@@ -5,6 +5,7 @@ import { ModelMessage } from 'ai';
 type UseAgentResult = {
   messages: ModelMessage[];
   sendMessage: (message: string) => Promise<void>;
+  abort: () => void;
 };
 
 export function useAgent(): UseAgentResult {
@@ -24,8 +25,11 @@ export function useAgent(): UseAgentResult {
     [agent],
   );
 
+  const abort = useCallback(() => agent.abort(), [agent]);
+
   return {
     messages,
     sendMessage,
+    abort,
   };
 }

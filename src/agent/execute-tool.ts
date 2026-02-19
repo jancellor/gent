@@ -2,6 +2,8 @@ import { tool } from 'ai';
 import { spawn } from 'child_process';
 import { z } from 'zod';
 
+const DEFAULT_TIMEOUT_S = 60;
+
 const executeInputSchema = z.object({
   command: z
     .string()
@@ -9,9 +11,10 @@ const executeInputSchema = z.object({
 });
 
 export type ExecuteToolOutput = {
-  exitCode: number;
-  stdout: string;
-  stderr: string;
+  exit?: number;
+  signal?: string;
+  stdout?: string;
+  stderr?: string;
 };
 
 export class ExecuteTool {
@@ -20,18 +23,37 @@ export class ExecuteTool {
   definition() {
     return tool({
       description:
-        'Execute a shell command in bash and return stdout/stderr/exit code.',
+        `Execute a shell command in bash and return stdout/stderr/exit/signal. ` +
+        `Commands are killed after ${DEFAULT_TIMEOUT_S}s. `,
       inputSchema: executeInputSchema,
     });
   }
 
-  execute(input: unknown): Promise<ExecuteToolOutput> {
+  execute(input: unknown, signal: AbortSignal): Promise<ExecuteToolOutput> {
     const { command } = executeInputSchema.parse(input);
+
+    const timeoutSignal = AbortSignal.timeout(DEFAULT_TIMEOUT_S * 1000);
+    const combinedSignal = AbortSignal.any([signal, timeoutSignal]);
+
+    if (combinedSignal.aborted) {
+      return Promise.resolve({});
+    }
 
     return new Promise<ExecuteToolOutput>((resolve) => {
       const proc = spawn('bash', ['-c', command]);
       let stdout = '';
       let stderr = '';
+      let resolved = false;
+
+      const onAbort = () => {
+        if (resolved) return;
+        proc.kill('SIGTERM');
+        setTimeout(() => {
+          if (!resolved) proc.kill('SIGKILL');
+        }, 5000).unref();
+      };
+
+      combinedSignal.addEventListener('abort', onAbort);
 
       proc.stdout.on('data', (data: Buffer) => {
         stdout += data.toString();
@@ -40,11 +62,14 @@ export class ExecuteTool {
         stderr += data.toString();
       });
 
-      proc.on('close', (code) => {
+      proc.on('close', (exit, signal) => {
+        resolved = true;
+        combinedSignal.removeEventListener('abort', onAbort);
         resolve({
-          exitCode: code ?? -1,
-          stdout,
-          stderr,
+          ...(exit !== null && { exit }),
+          ...(signal && { signal }),
+          ...(stdout && { stdout }),
+          ...(stderr && { stderr }),
         });
       });
     });
