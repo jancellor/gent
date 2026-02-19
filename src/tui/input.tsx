@@ -90,6 +90,11 @@ export function Input({ onSubmit }: InputProps) {
     }
 
     if (key.return) {
+      if (key.meta) {
+        insertText("\n");
+        return;
+      }
+
       const message = value.trim();
       if (!message) {
         return;

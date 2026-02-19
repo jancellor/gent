@@ -37,19 +37,21 @@ EOF
 For simple one-line edits, use a single `sd` command.
 
 ```bash
-sd 'old text' 'new text' path/to/file
+sd -F 'old text' 'new text' path/to/file
 ```
 
-Use `sd`/`read` with heredocs for reliable multiline editing.
+Use `sd` with `cat` + heredocs for reliable multiline editing.
 
 ```bash
-IFS= read -r -d '' OLD_BLOCK <<'OLD_EOF' || true
+OLD_BLOCK="$(cat <<'OLD_EOF'
 <old content>
 OLD_EOF
+)"
 
-IFS= read -r -d '' NEW_BLOCK <<'NEW_EOF' || true
+NEW_BLOCK="$(cat <<'NEW_EOF'
 <new content>
 NEW_EOF
+)"
 
-sd -s "$OLD_BLOCK" "$NEW_BLOCK" path/to/file
+sd -F "$OLD_BLOCK" "$NEW_BLOCK" path/to/file
 ```
