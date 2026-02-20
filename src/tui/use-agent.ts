@@ -4,6 +4,7 @@ import { ModelMessage } from 'ai';
 
 type UseAgentResult = {
   messages: ModelMessage[];
+  modelId: string;
   sendMessage: (message: string) => Promise<void>;
   abort: () => void;
   clear: (beforeClear?: () => void) => Promise<void>;
@@ -32,6 +33,7 @@ export function useAgent(): UseAgentResult {
 
   return {
     messages,
+    modelId: agent.modelId,
     sendMessage,
     abort,
     clear,

@@ -5,12 +5,14 @@ import { AssistantPartMessage } from './assistant-part-message.js';
 import { SpinnerMessage } from './spinner-message.js';
 import { ToolPartMessage } from './tool-part-message.js';
 import { UserPartMessage } from './user-part-message.js';
+import { Welcome } from './welcome.js';
 
 interface MessagesProps {
   messages: ModelMessage[];
+  model: string;
 }
 
-export function Messages({ messages }: MessagesProps) {
+export function Messages({ messages, model }: MessagesProps) {
   const toolResults = buildToolResultsMap(messages);
 
   const parts = messages.flatMap((message, i) =>
@@ -30,7 +32,16 @@ export function Messages({ messages }: MessagesProps) {
   const staticParts = splitIdx === -1 ? parts : parts.slice(0, splitIdx);
   const activeParts = splitIdx === -1 ? [] : parts.slice(splitIdx);
 
-  const renderPart = (p: (typeof parts)[number]) => {
+  type MessagePart = (typeof parts)[number];
+  type WelcomeItem = { id: 'welcome'; type: 'welcome' };
+  type StaticItem = WelcomeItem | MessagePart;
+
+  const allStaticItems: StaticItem[] = [
+    { id: 'welcome', type: 'welcome' },
+    ...staticParts,
+  ];
+
+  const renderPart = (p: MessagePart) => {
     if (p.type === 'text') {
       const Component = p.role === 'user' ? UserPartMessage : AssistantPartMessage;
       return <Component key={p.id} text={p.text} />;
@@ -49,8 +60,11 @@ export function Messages({ messages }: MessagesProps) {
 
   return (
     <Box flexGrow={1} flexDirection="column">
-      <Static items={staticParts}>
-        {(p) => renderPart(p)}
+      <Static items={allStaticItems}>
+        {(item) => {
+          if (item.type === 'welcome') return <Welcome key="welcome" model={model} />;
+          return renderPart(item as MessagePart);
+        }}
       </Static>
       {activeParts.map(renderPart)}
       {showSpinner && <SpinnerMessage />}

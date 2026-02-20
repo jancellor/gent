@@ -22,6 +22,7 @@ type AgentOptions = {
 
 export class Agent {
   messages: ModelMessage[] = [];
+  readonly modelId: string;
 
   private onUpdate?: () => void;
   private languageModel: LanguageModel;
@@ -32,6 +33,7 @@ export class Agent {
 
   constructor(options?: AgentOptions) {
     const config = new ConfigReader().read();
+    this.modelId = config.model;
     const provider = createOpenAICompatible({
       name: 'gent',
       apiKey: config.apiKey,
