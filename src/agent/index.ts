@@ -1,1 +1,1 @@
-export { Agent, ABORTED_MESSAGE, type ModelMessage } from './agent.js';
+export { Agent, ABORTED_MESSAGE, type GentMessage } from './agent.js';

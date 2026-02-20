@@ -13,7 +13,7 @@ import { SystemPrompt } from './system-prompt.js';
 import { Serializer } from './serializer.js';
 import { Tools } from './tools.js';
 
-export type { ModelMessage };
+export type GentMessage = ModelMessage & { _uiHidden?: boolean };
 
 export const ABORTED_MESSAGE = '[Aborted]';
 
@@ -22,7 +22,7 @@ type AgentOptions = {
 };
 
 export class Agent {
-  messages: ModelMessage[] = [];
+  messages: GentMessage[] = [];
   readonly modelId: string;
 
   private onUpdate?: () => void;
@@ -68,7 +68,7 @@ export class Agent {
       if (!this.messages.length) {
         const initContent = new InitPrompt().build();
         if (initContent) {
-          this.messages.push({ role: 'user', content: initContent });
+          this.messages.push({ role: 'user', content: initContent, _uiHidden: true });
         }
       }
 

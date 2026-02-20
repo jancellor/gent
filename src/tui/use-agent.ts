@@ -1,9 +1,8 @@
 import { useCallback, useState } from 'react';
-import { Agent } from '../agent/index.js';
-import { ModelMessage } from 'ai';
+import { Agent, type GentMessage } from '../agent/index.js';
 
 type UseAgentResult = {
-  messages: ModelMessage[];
+  messages: GentMessage[];
   modelId: string;
   sendMessage: (message: string) => Promise<void>;
   abort: () => void;
@@ -11,7 +10,7 @@ type UseAgentResult = {
 };
 
 export function useAgent(): UseAgentResult {
-  const [messages, setMessages] = useState<ModelMessage[]>([]);
+  const [messages, setMessages] = useState<GentMessage[]>([]);
   const [agent] = useState<Agent>(() => {
     let instance: Agent;
     instance = new Agent({
