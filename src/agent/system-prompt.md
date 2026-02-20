@@ -38,29 +38,22 @@ EOF
 
 ### Editing
 
+Use `sd -F` with `cat` and heredocs for targeted edits.
 Generally prefer making targeted edits rather than rewriting the entire file.
 After editing, read back the modified region to verify.
 
-For simple one-line edits, use a single `sd -F` command.
-
 ```bash
-sd -F 'old text' 'new text' path/to/file
-```
-
-Use `sd -F` with `cat` + heredocs for reliable multiline editing.
-
-```bash
-OLD_BLOCK="$(cat <<'OLD_EOF'
+OLD_BLOCK=$(cat <<'OLD_EOF'
 <old content>
 OLD_EOF
-)"
+)
 
-NEW_BLOCK="$(cat <<'NEW_EOF'
+NEW_BLOCK=$(cat <<'NEW_EOF'
 <new content>
 NEW_EOF
-)"
+)
 
-sd -F "$OLD_BLOCK" "$NEW_BLOCK" path/to/file
+sd -F -- "$OLD_BLOCK" "$NEW_BLOCK" path/to/file
 ```
 
 ## Background processes
