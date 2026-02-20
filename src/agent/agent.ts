@@ -66,7 +66,7 @@ export class Agent {
   sendMessage(message: string): Promise<void> {
     return this.serializer.submit(async () => {
       if (!this.messages.length) {
-        const initContent = new InitPrompt().build();
+        const initContent = await new InitPrompt().build();
         if (initContent) {
           this.messages.push({ role: 'user', content: initContent, _uiHidden: true });
         }

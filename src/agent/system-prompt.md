@@ -15,6 +15,13 @@ Guidelines:
 - Be concise in your responses.
 - Show file paths clearly when working with files.
 
+## Searching
+
+Use `ls`, `rg`, `fd` for exploring the filesystem.
+Use flags for following symlinks, including hidden items,
+and not ignoring ignored items where appropriate,
+eg `ls -a`, `rg -L -uu`, `fd -L -u`.
+
 ## File editing
 
 ### Reading
