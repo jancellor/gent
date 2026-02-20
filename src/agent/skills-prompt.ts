@@ -17,16 +17,21 @@ export class SkillsPrompt {
 
     const skills = (
       await Promise.all(files.map((abs) => this.parseSkill(abs, home, cwd)))
-    ).filter(Boolean);
+    ).filter((s) => !!s);
 
-    return !skills.length
-      ? ''
-      : [
-          'The following agent skills are available. To use a skill, read its SKILL.md file for full instructions.',
-          '<SKILLS>',
-          JSON.stringify(skills, null, 2),
-          '</SKILLS>',
-        ].join('\n\n');
+    if (!skills.length) return '';
+    return [
+      'The following agent skills have been loaded from SKILL.md files.\n' +
+        'Agent skills contain additional instructions/code.\n' +
+        'The following are just brief descriptions/summaries indicating relevance.\n' +
+        'Read the full SKILL.md file when relevant to your task.',
+      '<AGENT_SKILLS>',
+      '# Agent skills',
+      ...skills.map(
+        (s) => `## \`${s.name}\`\n\nPath: \`${s.path}\`\n\n${s.description}`,
+      ),
+      '</AGENT_SKILLS>',
+    ].join('\n\n');
   }
 
   private skillsRoots(home: string, cwd: string): string[] {

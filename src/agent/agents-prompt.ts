@@ -13,14 +13,13 @@ export class AgentsPrompt {
       )
     ).filter(Boolean);
 
-    return !contents.length
-      ? ''
-      : [
-          'Follow the instructions below that came from AGENTS.md files.',
-          '<INSTRUCTIONS>',
-          ...contents,
-          '</INSTRUCTIONS>',
-        ].join('\n\n');
+    if (!contents.length) return '';
+    return [
+      'Follow the instructions below that have come from AGENTS.md files.',
+      '<AGENT_INSTRUCTIONS>',
+      ...contents,
+      '</AGENT_INSTRUCTIONS>',
+    ].join('\n\n');
   }
 
   private async tryRead(path: string): Promise<string | undefined> {

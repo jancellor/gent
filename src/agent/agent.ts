@@ -65,12 +65,7 @@ export class Agent {
 
   sendMessage(message: string): Promise<void> {
     return this.serializer.submit(async () => {
-      if (!this.messages.length) {
-        const initContent = await new InitPrompt().build();
-        if (initContent) {
-          this.messages.push({ role: 'user', content: initContent, _uiHidden: true });
-        }
-      }
+      await this.addInitialMessages();
 
       this.messages.push({ role: 'user', content: message });
       this.notify();
@@ -108,6 +103,15 @@ export class Agent {
         this.controller = null;
       }
     });
+  }
+
+  private async addInitialMessages() {
+    if (!this.messages.length) {
+      const initContent = await new InitPrompt().build();
+      if (initContent) {
+        this.messages.push({ role: 'user', content: initContent, _uiHidden: true });
+      }
+    }
   }
 
   private async callTools(
