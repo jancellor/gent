@@ -8,6 +8,7 @@ import {
   type TypedToolCall,
 } from 'ai';
 import { ConfigReader } from './config.js';
+import { InitPrompt } from './init-prompt.js';
 import { SystemPrompt } from './system-prompt.js';
 import { Serializer } from './serializer.js';
 import { Tools } from './tools.js';
@@ -64,6 +65,13 @@ export class Agent {
 
   sendMessage(message: string): Promise<void> {
     return this.serializer.submit(async () => {
+      if (!this.messages.length) {
+        const initContent = new InitPrompt().build();
+        if (initContent) {
+          this.messages.push({ role: 'user', content: initContent });
+        }
+      }
+
       this.messages.push({ role: 'user', content: message });
       this.notify();
 
