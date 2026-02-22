@@ -37,7 +37,8 @@ export function Input({ onSubmit, onAbort, onClear }: InputProps) {
     }
 
     if (key.ctrl && input === 'c') {
-      process.exit(0);
+      process.kill(process.pid, 'SIGINT');
+      return;
     }
 
     if (key.ctrl && input === 'a') {

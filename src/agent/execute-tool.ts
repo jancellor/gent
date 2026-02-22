@@ -1,6 +1,6 @@
 import { tool } from 'ai';
-import { spawn } from 'child_process';
 import { z } from 'zod';
+import { processManager } from './process-manager.js';
 
 const DEFAULT_TIMEOUT_S = 60;
 
@@ -40,16 +40,16 @@ export class ExecuteTool {
     }
 
     return new Promise<ExecuteToolOutput>((resolve) => {
-      const proc = spawn('bash', ['-c', command]);
+      const proc = processManager.spawn('bash', ['-c', command]);
       let stdout = '';
       let stderr = '';
       let resolved = false;
 
       const onAbort = () => {
         if (resolved) return;
-        proc.kill('SIGTERM');
+        processManager.signalProcesses(proc, 'SIGTERM');
         setTimeout(() => {
-          if (!resolved) proc.kill('SIGKILL');
+          if (!resolved) processManager.signalProcesses(proc, 'SIGKILL');
         }, 5000).unref();
       };
 
