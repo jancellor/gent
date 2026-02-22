@@ -17,22 +17,18 @@ export type GentMessage = ModelMessage & { _uiHidden?: boolean };
 
 export const ABORTED_MESSAGE = '[Aborted]';
 
-type AgentOptions = {
-  onUpdate?: () => void;
-};
-
 export class Agent {
   messages: GentMessage[] = [];
   readonly modelId: string;
 
-  private onUpdate?: () => void;
+  private updateListeners = new Set<() => void>();
   private languageModel: LanguageModel;
   private systemPrompt: string;
   private tools: Tools;
   private serializer = new Serializer();
   private controller: AbortController | null = null;
 
-  constructor(options?: AgentOptions) {
+  constructor() {
     const config = new ConfigReader().read();
     this.modelId = config.model;
     const provider = createOpenAICompatible({
@@ -43,11 +39,17 @@ export class Agent {
     this.languageModel = provider(config.model);
     this.systemPrompt = new SystemPrompt().build();
     this.tools = new Tools();
-    this.onUpdate = options?.onUpdate;
   }
 
   private notify(): void {
-    this.onUpdate?.();
+    this.updateListeners.forEach((listener) => listener());
+  }
+
+  addUpdateListener(listener: () => void): () => void {
+    this.updateListeners.add(listener);
+    return () => {
+      this.updateListeners.delete(listener);
+    };
   }
 
   abort(): void {
@@ -55,8 +57,8 @@ export class Agent {
   }
 
   async clear(beforeClear?: () => void): Promise<void> {
-    this.abort(); // doesn't abort whole queue, but that's fine
-    return this.serializer.submit(async () => {
+    await this.cancelAll();
+    await this.serializer.submit(async () => {
       beforeClear?.();
       this.messages = [];
       this.notify();
@@ -103,6 +105,11 @@ export class Agent {
         this.controller = null;
       }
     });
+  }
+
+  async cancelAll(): Promise<void> {
+    this.abort();
+    await this.serializer.cancelPending();
   }
 
   private async addInitialMessages() {

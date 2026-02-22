@@ -1,6 +1,22 @@
 #!/usr/bin/env bun
 import React from 'react';
 import { render } from 'ink';
+import { Agent } from './agent/index.js';
+import { ShutdownManager } from './shutdown-manager.js';
 import { App } from './tui/app.js';
 
-render(<App />, { exitOnCtrlC: false });
+const agent = new Agent();
+
+const shutdownManager = new ShutdownManager(async () => {
+  app.unmount();
+  await agent.cancelAll();
+});
+shutdownManager.installSignalHandlers();
+
+const app = render(
+  <App
+    agent={agent}
+    onRequestShutdown={() => shutdownManager.requestShutdown()}
+  />,
+  { exitOnCtrlC: false },
+);

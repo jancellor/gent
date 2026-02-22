@@ -8,9 +8,10 @@ type InputProps = {
   onSubmit: (message: string) => void | Promise<void>;
   onAbort: () => void;
   onClear: (beforeClear?: () => void) => Promise<void>;
+  onRequestShutdown: () => void;
 };
 
-export function Input({ onSubmit, onAbort, onClear }: InputProps) {
+export function Input({ onSubmit, onAbort, onClear, onRequestShutdown }: InputProps) {
   const {
     value,
     beforeCursor,
@@ -37,7 +38,7 @@ export function Input({ onSubmit, onAbort, onClear }: InputProps) {
     }
 
     if (key.ctrl && input === 'c') {
-      process.kill(process.pid, 'SIGINT');
+      onRequestShutdown();
       return;
     }
 

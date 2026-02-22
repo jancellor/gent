@@ -1,8 +1,11 @@
 import { tool } from 'ai';
+import { type ChildProcessByStdio, spawn } from 'child_process';
+import process from 'process';
+import type { Readable } from 'stream';
 import { z } from 'zod';
-import { processManager } from './process-manager.js';
 
 const DEFAULT_TIMEOUT_S = 60;
+const TERMINATION_GRACE_MS = 5000;
 
 const executeInputSchema = z.object({
   command: z
@@ -40,17 +43,20 @@ export class ExecuteTool {
     }
 
     return new Promise<ExecuteToolOutput>((resolve) => {
-      const proc = processManager.spawn('bash', ['-c', command]);
+      const proc = spawn('bash', ['-c', command], {
+        detached: true,
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
       let stdout = '';
       let stderr = '';
       let resolved = false;
 
       const onAbort = () => {
         if (resolved) return;
-        processManager.signalProcesses(proc, 'SIGTERM');
+        this.signalProcessGroup(proc, 'SIGTERM');
         setTimeout(() => {
-          if (!resolved) processManager.signalProcesses(proc, 'SIGKILL');
-        }, 5000).unref();
+          if (!resolved) this.signalProcessGroup(proc, 'SIGKILL');
+        }, TERMINATION_GRACE_MS).unref();
       };
 
       combinedSignal.addEventListener('abort', onAbort);
@@ -73,5 +79,30 @@ export class ExecuteTool {
         });
       });
     });
+  }
+
+  private signalProcessGroup(
+    proc: ChildProcessByStdio<null, Readable, Readable>,
+    signal: NodeJS.Signals | number,
+  ): void {
+    if (proc.killed) {
+      return;
+    }
+    if (!proc.pid) {
+      return;
+    }
+    try {
+      process.kill(-proc.pid, signal);
+    } catch (error: unknown) {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        (error as { code?: string }).code === 'ESRCH'
+      ) {
+        return;
+      }
+      throw error;
+    }
   }
 }
